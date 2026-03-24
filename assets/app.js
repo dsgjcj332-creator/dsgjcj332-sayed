@@ -65,34 +65,126 @@
     return tips;
   }
 
+  function getAiRuleSummary(data, bmi) {
+    const rules = [];
+    if (data.healthCondition === 'joint_pain') rules.push('تخفيف الضغط على المفاصل');
+    if (data.healthCondition === 'chronic') rules.push('شدة منخفضة مع انتظام');
+    if (data.healthCondition === 'injury') rules.push('تدرج حذر بعد الإصابة');
+    if (Number(data.age) >= 50) rules.push('تمارين توازن وحركة آمنة');
+    if (bmi >= 30) rules.push('كارديو منخفض التأثير لحرق الدهون');
+    if (data.goal === 'muscle_gain') rules.push('إضافة مقاومة لبناء العضلات');
+    if (data.goal === 'flexibility') rules.push('زيادة تمارين المرونة');
+    return rules;
+  }
+
+  function aiRecommendExercises(data, bmi) {
+    const allExercises = Object.keys(db).reduce(function (acc, key) {
+      return acc.concat(db[key]);
+    }, []);
+
+    const uniqueExercises = [];
+    const seen = {};
+    allExercises.forEach(function (ex) {
+      if (!seen[ex.name]) {
+        seen[ex.name] = true;
+        uniqueExercises.push(ex);
+      }
+    });
+
+    const scored = uniqueExercises.map(function (ex) {
+      let score = 0;
+      const reasons = [];
+      const diff = ex.difficulty;
+      const easy = diff.indexOf('سهل') !== -1;
+      const medium = diff === 'متوسط';
+
+      if (data.goal === 'weight_loss') {
+        if (ex.benefits.indexOf('حرق') !== -1 || ex.benefits.indexOf('كارديو') !== -1) {
+          score += 3;
+          reasons.push('مناسب لهدف إنقاص الوزن');
+        }
+      } else if (data.goal === 'muscle_gain') {
+        if (ex.benefits.indexOf('تقوية') !== -1 || ex.benefits.indexOf('بناء العضلات') !== -1) {
+          score += 3;
+          reasons.push('يدعم بناء العضلات');
+        }
+      } else if (data.goal === 'flexibility') {
+        if (ex.benefits.indexOf('مرونة') !== -1 || ex.benefits.indexOf('نطاق الحركة') !== -1 || ex.name.indexOf('يوغا') !== -1) {
+          score += 3;
+          reasons.push('يدعم هدف المرونة');
+        }
+      } else if (ex.benefits.indexOf('تحسين') !== -1) {
+        score += 2;
+        reasons.push('مناسب للياقة العامة');
+      }
+
+      if (data.healthCondition === 'joint_pain' || data.healthCondition === 'chronic') {
+        if (ex.name.indexOf('المائية') !== -1 || ex.name.indexOf('تاي تشي') !== -1 || ex.name.indexOf('الخفيف') !== -1 || ex.name.indexOf('اليوغا') !== -1 || ex.name.indexOf('الدراجة الثابتة') !== -1) {
+          score += 4;
+          reasons.push('آمن للحالة الصحية الحالية');
+        }
+        if (!easy) score -= 2;
+      }
+
+      if (data.healthCondition === 'injury') {
+        if (easy || ex.name.indexOf('تمدد') !== -1 || ex.name.indexOf('تنفس') !== -1) {
+          score += 3;
+          reasons.push('اختيار متدرج بعد الإصابة');
+        }
+      }
+
+      if (data.fitnessLevel === 'beginner') {
+        if (easy) {
+          score += 2;
+          reasons.push('مناسب لمستوى مبتدئ');
+        } else if (!medium) {
+          score -= 2;
+        }
+      } else if (data.fitnessLevel === 'advanced') {
+        if (!easy) score += 1;
+      }
+
+      if (Number(data.age) >= 50 && !easy) {
+        score -= 1;
+      }
+
+      if (bmi >= 30) {
+        if (easy && (ex.benefits.indexOf('حرق') !== -1 || ex.benefits.indexOf('القلب') !== -1)) {
+          score += 2;
+          reasons.push('يساعد على الحرق بدون إجهاد عالي');
+        }
+        if (ex.name.indexOf('HIIT') !== -1 || ex.name.indexOf('القفز') !== -1 || ex.name.indexOf('الجري') !== -1) {
+          score -= 3;
+        }
+      }
+
+      return {
+        exercise: ex,
+        score: score,
+        reason: reasons.slice(0, 2).join(' • ')
+      };
+    });
+
+    scored.sort(function (a, b) { return b.score - a.score; });
+    const limit = data.timeAvailable === '15' ? 3 : (data.timeAvailable === '30' ? 5 : 7);
+    return scored.slice(0, limit).map(function (item) {
+      return Object.assign({}, item.exercise, {
+        aiReason: item.reason || 'اختيار متوازن حسب الحالة الصحية والهدف'
+      });
+    });
+  }
+
   function suggestExercises(data) {
     const bmi = calculateBMI(Number(data.weight), Number(data.height));
     const bmiAnalysis = analyzeBMI(bmi);
-    let recommended = [];
-
-    if (data.healthCondition === 'joint_pain' || data.healthCondition === 'chronic') {
-      recommended = db.joint_safe.concat(db.flexibility);
-    } else if (data.fitnessLevel === 'beginner') {
-      recommended = db.beginner.concat(db.cardio_low.slice(0, 2));
-    } else if (data.goal === 'weight_loss') {
-      recommended = bmi > 30
-        ? db.cardio_low.concat(db.joint_safe.slice(0, 1))
-        : db.cardio_high.concat(db.strength.slice(0, 2));
-    } else if (data.goal === 'muscle_gain') {
-      recommended = db.strength.concat(db.cardio_low.slice(0, 1));
-    } else if (data.goal === 'flexibility') {
-      recommended = db.flexibility.concat(db.joint_safe.slice(0, 2));
-    } else {
-      recommended = db.cardio_low.slice(0, 2).concat(db.strength.slice(0, 2)).concat(db.flexibility.slice(0, 1));
-    }
-
-    if (data.timeAvailable === '15') recommended = recommended.slice(0, 3);
-    else if (data.timeAvailable === '30') recommended = recommended.slice(0, 5);
+    const recommended = aiRecommendExercises(data, bmi);
+    const aiRules = getAiRuleSummary(data, bmi);
 
     return {
       bmi: bmi.toFixed(1),
       bmiAnalysis,
       exercises: recommended,
+      aiRules: aiRules,
       tips: generateTips(data, bmi)
     };
   }
@@ -121,6 +213,7 @@
               '</div>' +
               '<div class="mt-3 small text-muted badge-soft rounded px-2 py-1 d-inline-block">⏱ ' + ex.duration + '</div>' +
               '<div class="mt-3 small"><span class="fw-bold text-success">الفائدة:</span> ' + ex.benefits + '</div>' +
+              '<div class="mt-2 small text-primary"><span class="fw-bold">🤖 سبب ترشيح AI:</span> ' + (ex.aiReason || 'اختيار مناسب لملفك الصحي') + '</div>' +
             '</div>' +
           '</div>' +
         '</div>'
@@ -171,8 +264,9 @@
 
       '<div class="mb-4">' +
         '<div class="d-flex align-items-center justify-content-between mb-3">' +
-          '<h3 class="h4 fw-bold m-0">جدول التمارين المقترح</h3>' +
+          '<h3 class="h4 fw-bold m-0">جدول التمارين المقترح بواسطة المساعد الذكي AI</h3>' +
         '</div>' +
+        '<div class="alert alert-primary py-2 small"><span class="fw-bold">منطق AI المستخدم:</span> ' + (payload.results.aiRules && payload.results.aiRules.length ? payload.results.aiRules.join(' + ') : 'اختيار متوازن حسب الحالة الصحية والهدف والمستوى') + '</div>' +
         '<div class="row g-3">' + exCards + '</div>' +
       '</div>' +
 
