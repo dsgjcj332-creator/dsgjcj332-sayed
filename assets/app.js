@@ -1,39 +1,24 @@
 (function () {
   function qs(sel) { return document.querySelector(sel); }
 
-  const db = {
-    cardio_low: [
-      { name: 'المشي السريع', duration: '30 دقيقة', difficulty: 'سهل', image: '🚶', benefits: 'حرق السعرات وتحسين صحة القلب' },
-      { name: 'السباحة الخفيفة', duration: '20 دقيقة', difficulty: 'سهل', image: '🏊', benefits: 'تمرين شامل للجسم دون ضغط على المفاصل' },
-      { name: 'ركوب الدراجة', duration: '25 دقيقة', difficulty: 'سهل', image: '🚴', benefits: 'تقوية الساقين وحرق الدهون' }
-    ],
-    cardio_high: [
-      { name: 'الجري', duration: '30 دقيقة', difficulty: 'متوسط', image: '🏃', benefits: 'حرق سعرات عالي وتحسين التحمل' },
-      { name: 'تمارين HIIT', duration: '20 دقيقة', difficulty: 'صعب', image: '⚡', benefits: 'حرق الدهون المكثف في وقت قصير' },
-      { name: 'القفز بالحبل', duration: '15 دقيقة', difficulty: 'متوسط', image: '🪢', benefits: 'تنسيق الجسم ورفع معدل الحرق' }
-    ],
-    strength: [
-      { name: 'تمارين الضغط', duration: '3 مجموعات × 10', difficulty: 'متوسط', image: '💪', benefits: 'تقوية الصدر والذراعين والأكتاف' },
-      { name: 'السكوات', duration: '3 مجموعات × 15', difficulty: 'متوسط', image: '🦵', benefits: 'تقوية الساقين والمؤخرة' },
-      { name: 'البلانك', duration: '3 × 30 ثانية', difficulty: 'متوسط', image: '🧘', benefits: 'تقوية عضلات البطن والظهر (الكور)' },
-      { name: 'رفع الأثقال الخفيفة', duration: '3 مجموعات × 12', difficulty: 'سهل', image: '🏋️', benefits: 'بناء العضلات وشد الجسم' }
-    ],
-    flexibility: [
-      { name: 'اليوغا للمبتدئين', duration: '30 دقيقة', difficulty: 'سهل', image: '🧘‍♀️', benefits: 'تحسين المرونة والاسترخاء الذهني' },
-      { name: 'تمارين التمدد', duration: '15 دقيقة', difficulty: 'سهل', image: '🤸', benefits: 'منع الإصابات وتحسين نطاق الحركة' },
-      { name: 'بيلاتس', duration: '25 دقيقة', difficulty: 'متوسط', image: '🤸‍♀️', benefits: 'تقوية العضلات الأساسية والمرونة' }
-    ],
-    beginner: [
-      { name: 'المشي الخفيف', duration: '20 دقيقة', difficulty: 'سهل جداً', image: '🚶‍♂️', benefits: 'البداية الآمنة لتحريك الدورة الدموية' },
-      { name: 'تمارين التنفس', duration: '10 دقائق', difficulty: 'سهل جداً', image: '🫁', benefits: 'تحسين القدرة التنفسية والاسترخاء' },
-      { name: 'تمارين الكرسي', duration: '15 دقيقة', difficulty: 'سهل', image: '🪑', benefits: 'تقوية العضلات لكبار السن أو المصابين' }
-    ],
-    joint_safe: [
-      { name: 'التمارين المائية', duration: '30 دقيقة', difficulty: 'سهل', image: '💧', benefits: 'مقاومة طبيعية وآمنة تماماً للمفاصل' },
-      { name: 'تاي تشي', duration: '20 دقيقة', difficulty: 'سهل', image: '☯️', benefits: 'توازن ومرونة وتركيز دون إجهاد' },
-      { name: 'الدراجة الثابتة', duration: '20 دقيقة', difficulty: 'سهل', image: '🚲', benefits: 'كارديو فعال وآمن للركبتين' }
-    ]
-  };
+  const db = [
+    { name: 'بنش برس (بار/دمبل)', image: '🏋️', type: 'strength', levels: ['intermediate', 'advanced'], goals: ['muscle_gain'], safety: ['normal'], durationByTime: { 15: '4 مجموعات × 6-8', 30: '5 مجموعات × 6-8', 60: '5 مجموعات × 6-10' }, benefits: 'زيادة قوة وحجم عضلات الصدر والترايسبس' },
+    { name: 'سكوات مركب', image: '🦵', type: 'strength', levels: ['intermediate', 'advanced'], goals: ['muscle_gain', 'general_fitness'], safety: ['normal'], durationByTime: { 15: '4 مجموعات × 6-8', 30: '5 مجموعات × 6-10', 60: '5 مجموعات × 6-10' }, benefits: 'بناء عضلات الرجلين والعضلات الأساسية' },
+    { name: 'رفعة رومانية (RDL)', image: '🏋️‍♂️', type: 'strength', levels: ['intermediate', 'advanced'], goals: ['muscle_gain'], safety: ['normal'], durationByTime: { 15: '3 مجموعات × 8', 30: '4 مجموعات × 8', 60: '4 مجموعات × 8-10' }, benefits: 'تقوية الخلفية والسلسلة الخلفية للجسم' },
+    { name: 'سحب علوي (Lat Pulldown)', image: '🧲', type: 'strength', levels: ['beginner', 'intermediate', 'advanced'], goals: ['muscle_gain', 'general_fitness'], safety: ['normal', 'injury'], durationByTime: { 15: '3 مجموعات × 10', 30: '4 مجموعات × 10', 60: '4 مجموعات × 10-12' }, benefits: 'بناء عضلات الظهر وتحسين القوام' },
+    { name: 'ضغط كتف دمبل', image: '💪', type: 'strength', levels: ['beginner', 'intermediate', 'advanced'], goals: ['muscle_gain'], safety: ['normal'], durationByTime: { 15: '3 مجموعات × 10', 30: '4 مجموعات × 8-10', 60: '4 مجموعات × 8-10' }, benefits: 'تقوية الأكتاف والثبات العلوي' },
+    { name: 'تمارين الضغط', image: '💥', type: 'strength', levels: ['beginner', 'intermediate', 'advanced'], goals: ['muscle_gain', 'general_fitness'], safety: ['normal', 'injury'], durationByTime: { 15: '3 مجموعات × 8-12', 30: '4 مجموعات × 10-15', 60: '5 مجموعات × 10-15' }, benefits: 'تقوية الصدر والذراعين ويمكن تطويرها تدريجياً' },
+    { name: 'تمارين HIIT على الدراجة', image: '⚡', type: 'cardio', levels: ['intermediate', 'advanced'], goals: ['weight_loss'], safety: ['normal'], durationByTime: { 15: '12 دقيقة (40ث سريع / 80ث هادئ)', 30: '20 دقيقة (45ث سريع / 75ث هادئ)', 60: '30 دقيقة (45ث سريع / 75ث هادئ)' }, benefits: 'رفع الحرق وتحسين اللياقة القلبية بسرعة' },
+    { name: 'الجري المتدرج', image: '🏃', type: 'cardio', levels: ['intermediate', 'advanced'], goals: ['weight_loss', 'general_fitness'], safety: ['normal'], durationByTime: { 15: '15 دقيقة', 30: '25 دقيقة', 60: '40 دقيقة' }, benefits: 'تحسين التحمل وحرق سعرات أعلى' },
+    { name: 'المشي السريع', image: '🚶', type: 'cardio', levels: ['beginner', 'intermediate'], goals: ['weight_loss', 'general_fitness'], safety: ['normal', 'joint_pain', 'chronic', 'injury'], durationByTime: { 15: '15 دقيقة', 30: '25 دقيقة', 60: '40 دقيقة' }, benefits: 'تنشيط القلب والدورة الدموية بأمان' },
+    { name: 'السباحة', image: '🏊', type: 'cardio', levels: ['beginner', 'intermediate', 'advanced'], goals: ['weight_loss', 'general_fitness'], safety: ['joint_pain', 'chronic', 'injury', 'normal'], durationByTime: { 15: '15 دقيقة', 30: '25 دقيقة', 60: '40 دقيقة' }, benefits: 'تمرين شامل منخفض الضغط على المفاصل' },
+    { name: 'الدراجة الثابتة', image: '🚲', type: 'cardio', levels: ['beginner', 'intermediate', 'advanced'], goals: ['weight_loss', 'general_fitness'], safety: ['joint_pain', 'chronic', 'injury', 'normal'], durationByTime: { 15: '15 دقيقة', 30: '25 دقيقة', 60: '35 دقيقة' }, benefits: 'كارديو فعال وآمن للركبتين' },
+    { name: 'بلانك + كور', image: '🧱', type: 'core', levels: ['beginner', 'intermediate', 'advanced'], goals: ['general_fitness', 'muscle_gain'], safety: ['normal', 'injury'], durationByTime: { 15: '3 جولات × 30-45 ثانية', 30: '4 جولات × 45 ثانية', 60: '5 جولات × 45-60 ثانية' }, benefits: 'ثبات الجذع وتقليل الإصابات' },
+    { name: 'يوغا حركية', image: '🧘‍♀️', type: 'flexibility', levels: ['beginner', 'intermediate', 'advanced'], goals: ['flexibility', 'general_fitness'], safety: ['normal', 'joint_pain', 'chronic', 'injury'], durationByTime: { 15: '12 دقيقة', 30: '25 دقيقة', 60: '35 دقيقة' }, benefits: 'تحسين المرونة ونطاق الحركة وتقليل الشد' },
+    { name: 'تمارين تمدد موجهة', image: '🤸', type: 'flexibility', levels: ['beginner', 'intermediate', 'advanced'], goals: ['flexibility', 'injury_recovery'], safety: ['normal', 'joint_pain', 'chronic', 'injury'], durationByTime: { 15: '10 دقائق', 30: '20 دقيقة', 60: '30 دقيقة' }, benefits: 'زيادة المرونة وتسريع التعافي العضلي' },
+    { name: 'تمارين مقاومة مطاطية', image: '🟢', type: 'strength', levels: ['beginner', 'intermediate'], goals: ['muscle_gain', 'general_fitness'], safety: ['joint_pain', 'chronic', 'injury', 'normal'], durationByTime: { 15: '3 مجموعات × 12', 30: '4 مجموعات × 12', 60: '5 مجموعات × 12-15' }, benefits: 'تقوية العضلات بأمان مع ضغط أقل على المفاصل' },
+    { name: 'تاي تشي', image: '☯️', type: 'balance', levels: ['beginner', 'intermediate'], goals: ['flexibility', 'general_fitness'], safety: ['joint_pain', 'chronic', 'injury'], durationByTime: { 15: '12 دقيقة', 30: '20 دقيقة', 60: '30 دقيقة' }, benefits: 'تحسين التوازن والتحكم الحركي دون إجهاد' }
+  ];
 
   function calculateBMI(weightKg, heightCm) {
     const h = heightCm / 100;
@@ -77,85 +62,69 @@
     return rules;
   }
 
+  function durationForExercise(ex, timeAvailable) {
+    const key = String(timeAvailable || '30');
+    return ex.durationByTime[key] || ex.durationByTime['30'] || '20 دقيقة';
+  }
+
+  function difficultyFromLevel(level) {
+    if (level === 'beginner') return 'سهل';
+    if (level === 'intermediate') return 'متوسط';
+    return 'صعب';
+  }
+
   function aiRecommendExercises(data, bmi) {
-    const allExercises = Object.keys(db).reduce(function (acc, key) {
-      return acc.concat(db[key]);
-    }, []);
-
-    const uniqueExercises = [];
-    const seen = {};
-    allExercises.forEach(function (ex) {
-      if (!seen[ex.name]) {
-        seen[ex.name] = true;
-        uniqueExercises.push(ex);
-      }
-    });
-
-    const scored = uniqueExercises.map(function (ex) {
+    const scored = db.map(function (ex) {
       let score = 0;
       const reasons = [];
-      const diff = ex.difficulty;
-      const easy = diff.indexOf('سهل') !== -1;
-      const medium = diff === 'متوسط';
+      if (ex.goals.indexOf(data.goal) !== -1) {
+        score += 5;
+        reasons.push('مطابق لهدفك الأساسي');
+      }
 
-      if (data.goal === 'weight_loss') {
-        if (ex.benefits.indexOf('حرق') !== -1 || ex.benefits.indexOf('كارديو') !== -1) {
-          score += 3;
-          reasons.push('مناسب لهدف إنقاص الوزن');
-        }
-      } else if (data.goal === 'muscle_gain') {
-        if (ex.benefits.indexOf('تقوية') !== -1 || ex.benefits.indexOf('بناء العضلات') !== -1) {
-          score += 3;
-          reasons.push('يدعم بناء العضلات');
-        }
-      } else if (data.goal === 'flexibility') {
-        if (ex.benefits.indexOf('مرونة') !== -1 || ex.benefits.indexOf('نطاق الحركة') !== -1 || ex.name.indexOf('يوغا') !== -1) {
-          score += 3;
-          reasons.push('يدعم هدف المرونة');
-        }
-      } else if (ex.benefits.indexOf('تحسين') !== -1) {
+      if (ex.levels.indexOf(data.fitnessLevel) !== -1) {
+        score += 4;
+        reasons.push('مناسب لمستواك الحالي');
+      }
+
+      if (ex.safety.indexOf(data.healthCondition) !== -1) {
+        score += 5;
+        reasons.push('آمن لحالتك الصحية');
+      } else {
+        score -= 6;
+      }
+
+      if (data.goal === 'muscle_gain' && ex.type === 'strength') {
+        score += 3;
+      }
+      if (data.goal === 'weight_loss' && ex.type === 'cardio') {
+        score += 3;
+      }
+      if (data.goal === 'flexibility' && (ex.type === 'flexibility' || ex.type === 'balance')) {
+        score += 3;
+      }
+
+      if (data.healthCondition === 'joint_pain' && (ex.name.indexOf('الجري') !== -1 || ex.name.indexOf('سكوات مركب') !== -1)) {
+        score -= 5;
+      }
+      if (data.healthCondition === 'chronic' && ex.type === 'cardio' && ex.name.indexOf('HIIT') !== -1) {
+        score -= 5;
+      }
+      if (data.healthCondition === 'injury' && ex.type === 'strength' && data.fitnessLevel !== 'beginner') {
+        score -= 2;
+      }
+
+      if (Number(data.age) >= 50 && ex.type === 'strength' && data.fitnessLevel === 'advanced') {
+        score -= 2;
+      }
+
+      if (bmi >= 30 && ex.type === 'cardio' && ex.safety.indexOf(data.healthCondition) !== -1) {
         score += 2;
-        reasons.push('مناسب للياقة العامة');
       }
 
-      if (data.healthCondition === 'joint_pain' || data.healthCondition === 'chronic') {
-        if (ex.name.indexOf('المائية') !== -1 || ex.name.indexOf('تاي تشي') !== -1 || ex.name.indexOf('الخفيف') !== -1 || ex.name.indexOf('اليوغا') !== -1 || ex.name.indexOf('الدراجة الثابتة') !== -1) {
-          score += 4;
-          reasons.push('آمن للحالة الصحية الحالية');
-        }
-        if (!easy) score -= 2;
-      }
-
-      if (data.healthCondition === 'injury') {
-        if (easy || ex.name.indexOf('تمدد') !== -1 || ex.name.indexOf('تنفس') !== -1) {
-          score += 3;
-          reasons.push('اختيار متدرج بعد الإصابة');
-        }
-      }
-
-      if (data.fitnessLevel === 'beginner') {
-        if (easy) {
-          score += 2;
-          reasons.push('مناسب لمستوى مبتدئ');
-        } else if (!medium) {
-          score -= 2;
-        }
-      } else if (data.fitnessLevel === 'advanced') {
-        if (!easy) score += 1;
-      }
-
-      if (Number(data.age) >= 50 && !easy) {
-        score -= 1;
-      }
-
-      if (bmi >= 30) {
-        if (easy && (ex.benefits.indexOf('حرق') !== -1 || ex.benefits.indexOf('القلب') !== -1)) {
-          score += 2;
-          reasons.push('يساعد على الحرق بدون إجهاد عالي');
-        }
-        if (ex.name.indexOf('HIIT') !== -1 || ex.name.indexOf('القفز') !== -1 || ex.name.indexOf('الجري') !== -1) {
-          score -= 3;
-        }
+      if (data.goal === 'muscle_gain' && data.fitnessLevel === 'advanced' && ex.type === 'strength') {
+        score += 2;
+        reasons.push('يدعم برنامج مقاومة حقيقي لمستوى متقدم');
       }
 
       return {
@@ -168,9 +137,14 @@
     scored.sort(function (a, b) { return b.score - a.score; });
     const limit = data.timeAvailable === '15' ? 3 : (data.timeAvailable === '30' ? 5 : 7);
     return scored.slice(0, limit).map(function (item) {
-      return Object.assign({}, item.exercise, {
+      return {
+        name: item.exercise.name,
+        image: item.exercise.image,
+        difficulty: difficultyFromLevel(data.fitnessLevel),
+        duration: durationForExercise(item.exercise, data.timeAvailable),
+        benefits: item.exercise.benefits,
         aiReason: item.reason || 'اختيار متوازن حسب الحالة الصحية والهدف'
-      });
+      };
     });
   }
 
@@ -227,7 +201,7 @@
     root.innerHTML = (
       '<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">' +
         '<div>' +
-          '<h2 class="h3 fw-bold mb-1">برنامجك جاهز، ' + (payload.data.name || '') + '</h2>' +
+          '<h2 class="h3 fw-bold mb-1">خطة تدريبك المخصصة، ' + (payload.data.name || '') + '</h2>' +
           '<div class="text-muted small">تاريخ الإنشاء: ' + new Date().toLocaleDateString('ar-EG') + '</div>' +
         '</div>' +
         '<div class="d-flex gap-2">' +
