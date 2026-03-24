@@ -88,7 +88,7 @@ require __DIR__ . '/includes/header.php';
             <button class="btn btn-success fw-bold flex-fill" type="submit">تحليل النتائج</button>
           </div>
         </form>
-        <div class="text-muted small mt-3">ملاحظة: النتائج يتم توليدها بـ JavaScript ثم عرضها في صفحة النتائج.</div>
+        <div class="text-muted small mt-3">ملاحظة: النتائج يتم تحليلها عبر مساعد ذكي (AI) حسب حالتك الصحية ثم عرضها في صفحة النتائج.</div>
       </div>
     </div>
   </div>
