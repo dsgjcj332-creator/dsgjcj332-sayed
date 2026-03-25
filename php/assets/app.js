@@ -1,39 +1,33 @@
 (function () {
   function qs(sel) { return document.querySelector(sel); }
 
-  const db = {
-    cardio_low: [
-      { name: 'المشي السريع', duration: '30 دقيقة', difficulty: 'سهل', image: '🚶', benefits: 'حرق السعرات وتحسين صحة القلب' },
-      { name: 'السباحة الخفيفة', duration: '20 دقيقة', difficulty: 'سهل', image: '🏊', benefits: 'تمرين شامل للجسم دون ضغط على المفاصل' },
-      { name: 'ركوب الدراجة', duration: '25 دقيقة', difficulty: 'سهل', image: '🚴', benefits: 'تقوية الساقين وحرق الدهون' }
-    ],
-    cardio_high: [
-      { name: 'الجري', duration: '30 دقيقة', difficulty: 'متوسط', image: '🏃', benefits: 'حرق سعرات عالي وتحسين التحمل' },
-      { name: 'تمارين HIIT', duration: '20 دقيقة', difficulty: 'صعب', image: '⚡', benefits: 'حرق الدهون المكثف في وقت قصير' },
-      { name: 'القفز بالحبل', duration: '15 دقيقة', difficulty: 'متوسط', image: '🪢', benefits: 'تنسيق الجسم ورفع معدل الحرق' }
-    ],
-    strength: [
-      { name: 'تمارين الضغط', duration: '3 مجموعات × 10', difficulty: 'متوسط', image: '💪', benefits: 'تقوية الصدر والذراعين والأكتاف' },
-      { name: 'السكوات', duration: '3 مجموعات × 15', difficulty: 'متوسط', image: '🦵', benefits: 'تقوية الساقين والمؤخرة' },
-      { name: 'البلانك', duration: '3 × 30 ثانية', difficulty: 'متوسط', image: '🧘', benefits: 'تقوية عضلات البطن والظهر (الكور)' },
-      { name: 'رفع الأثقال الخفيفة', duration: '3 مجموعات × 12', difficulty: 'سهل', image: '🏋️', benefits: 'بناء العضلات وشد الجسم' }
-    ],
-    flexibility: [
-      { name: 'اليوغا للمبتدئين', duration: '30 دقيقة', difficulty: 'سهل', image: '🧘‍♀️', benefits: 'تحسين المرونة والاسترخاء الذهني' },
-      { name: 'تمارين التمدد', duration: '15 دقيقة', difficulty: 'سهل', image: '🤸', benefits: 'منع الإصابات وتحسين نطاق الحركة' },
-      { name: 'بيلاتس', duration: '25 دقيقة', difficulty: 'متوسط', image: '🤸‍♀️', benefits: 'تقوية العضلات الأساسية والمرونة' }
-    ],
-    beginner: [
-      { name: 'المشي الخفيف', duration: '20 دقيقة', difficulty: 'سهل جداً', image: '🚶‍♂️', benefits: 'البداية الآمنة لتحريك الدورة الدموية' },
-      { name: 'تمارين التنفس', duration: '10 دقائق', difficulty: 'سهل جداً', image: '🫁', benefits: 'تحسين القدرة التنفسية والاسترخاء' },
-      { name: 'تمارين الكرسي', duration: '15 دقيقة', difficulty: 'سهل', image: '🪑', benefits: 'تقوية العضلات لكبار السن أو المصابين' }
-    ],
-    joint_safe: [
-      { name: 'التمارين المائية', duration: '30 دقيقة', difficulty: 'سهل', image: '💧', benefits: 'مقاومة طبيعية وآمنة تماماً للمفاصل' },
-      { name: 'تاي تشي', duration: '20 دقيقة', difficulty: 'سهل', image: '☯️', benefits: 'توازن ومرونة وتركيز دون إجهاد' },
-      { name: 'الدراجة الثابتة', duration: '20 دقيقة', difficulty: 'سهل', image: '🚲', benefits: 'كارديو فعال وآمن للركبتين' }
-    ]
-  };
+  // Local exercise database - ONLY used as fallback if Gemini fails
+  const fallbackExercises = [
+    { name: 'المشي السريع', duration: '30 دقيقة', difficulty: 'سهل', image: '🚶', benefits: 'حرق السعرات وتحسين صحة القلب' },
+    { name: 'السباحة الخفيفة', duration: '20 دقيقة', difficulty: 'سهل', image: '🏊', benefits: 'تمرين شامل للجسم دون ضغط على المفاصل' },
+    { name: 'تمارين الضغط', duration: '3 مجموعات × 10', difficulty: 'متوسط', image: '💪', benefits: 'تقوية الصدر والذراعين' },
+    { name: 'البلانك', duration: '3 × 30 ثانية', difficulty: 'متوسط', image: '🧘', benefits: 'تقوية عضلات البطن والظهر' }
+  ];
+
+  async function fetchAIResults(data) {
+    try {
+      const resp = await fetch('api/ai_recommend.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: data })
+      });
+
+      const json = await resp.json().catch(function () { return null; });
+      if (!resp.ok || !json || !json.ok || !json.results) {
+        const msg = (json && json.error) ? json.error : 'فشل الاتصال بالذكاء الاصطناعي';
+        throw new Error(msg);
+      }
+
+      return json.results;
+    } catch (e) {
+      return null; // Return null to indicate Gemini failed
+    }
+  }
 
   function calculateBMI(weightKg, heightCm) {
     const h = heightCm / 100;
@@ -65,36 +59,61 @@
     return tips;
   }
 
-  function suggestExercises(data) {
-    const bmi = calculateBMI(Number(data.weight), Number(data.height));
+  // Create fallback result using local exercises when Gemini fails
+  function createFallbackResults(data, bmi) {
     const bmiAnalysis = analyzeBMI(bmi);
-    let recommended = [];
-
-    if (data.healthCondition === 'joint_pain' || data.healthCondition === 'chronic') {
-      recommended = db.joint_safe.concat(db.flexibility);
-    } else if (data.fitnessLevel === 'beginner') {
-      recommended = db.beginner.concat(db.cardio_low.slice(0, 2));
-    } else if (data.goal === 'weight_loss') {
-      recommended = bmi > 30
-        ? db.cardio_low.concat(db.joint_safe.slice(0, 1))
-        : db.cardio_high.concat(db.strength.slice(0, 2));
-    } else if (data.goal === 'muscle_gain') {
-      recommended = db.strength.concat(db.cardio_low.slice(0, 1));
-    } else if (data.goal === 'flexibility') {
-      recommended = db.flexibility.concat(db.joint_safe.slice(0, 2));
-    } else {
-      recommended = db.cardio_low.slice(0, 2).concat(db.strength.slice(0, 2)).concat(db.flexibility.slice(0, 1));
+    const limit = data.timeAvailable === '15' ? 3 : (data.timeAvailable === '30' ? 5 : 4);
+    
+    // Select appropriate fallback exercises based on health condition
+    let selected = fallbackExercises.slice(0, limit);
+    
+    // Filter out high impact exercises for joint pain
+    if (data.healthCondition === 'joint_pain') {
+      selected = selected.filter(function(ex) {
+        return ex.name.indexOf('المشي') !== -1 || ex.name.indexOf('السباحة') !== -1;
+      });
+      // Add more gentle exercises if filtered too much
+      if (selected.length < 2) {
+        selected.push({ name: 'تمارين الماء', duration: '20 دقيقة', difficulty: 'سهل', image: '💧', benefits: 'آمن تماماً للمفاصل' });
+      }
     }
-
-    if (data.timeAvailable === '15') recommended = recommended.slice(0, 3);
-    else if (data.timeAvailable === '30') recommended = recommended.slice(0, 5);
 
     return {
       bmi: bmi.toFixed(1),
-      bmiAnalysis,
-      exercises: recommended,
+      bmiAnalysis: bmiAnalysis,
+      exercises: selected.map(function(ex) {
+        return {
+          name: ex.name,
+          duration: ex.duration,
+          difficulty: ex.difficulty,
+          image: ex.image,
+          benefits: ex.benefits,
+          aiReason: 'اقتراح احتياطي (الذكاء الاصطناعي غير متاح)'
+        };
+      }),
       tips: generateTips(data, bmi)
     };
+  }
+
+  // Main function to get recommendations - TRIES GEMINI FIRST
+  async function suggestExercises(data) {
+    const bmi = calculateBMI(Number(data.weight), Number(data.height));
+    
+    // Try Gemini first
+    const geminiResults = await fetchGeminiResults(data);
+    
+    if (geminiResults && geminiResults.exercises && geminiResults.exercises.length > 0) {
+      // Gemini succeeded - return AI-generated results
+      return {
+        bmi: geminiResults.bmi || bmi.toFixed(1),
+        bmiAnalysis: geminiResults.bmiAnalysis || analyzeBMI(bmi),
+        exercises: geminiResults.exercises,
+        tips: geminiResults.tips || generateTips(data, bmi)
+      };
+    }
+    
+    // Gemini failed - use fallback local exercises
+    return createFallbackResults(data, bmi);
   }
 
   function renderResults(payload) {
@@ -121,6 +140,7 @@
               '</div>' +
               '<div class="mt-3 small text-muted badge-soft rounded px-2 py-1 d-inline-block">⏱ ' + ex.duration + '</div>' +
               '<div class="mt-3 small"><span class="fw-bold text-success">الفائدة:</span> ' + ex.benefits + '</div>' +
+              (ex.aiReason ? '<div class="mt-3 small text-muted">' + ex.aiReason + '</div>' : '') +
             '</div>' +
           '</div>' +
         '</div>'
@@ -138,8 +158,7 @@
           '<div class="text-muted small">تاريخ الإنشاء: ' + new Date().toLocaleDateString('ar-EG') + '</div>' +
         '</div>' +
         '<div class="d-flex gap-2">' +
-          '<button class="btn btn-outline-primary fw-bold" type="button" onclick="window.print()">طباعة</button>' +
-          '<a class="btn btn-outline-secondary fw-bold" href="assessment.php">جديد</a>' +
+          '<a class="btn btn-outline-secondary fw-bold" href="assessment.php">تقييم جديد</a>' +
         '</div>' +
       '</div>' +
 
@@ -204,11 +223,32 @@
       timeAvailable: form.timeAvailable.value
     };
 
-    const results = suggestExercises(data);
     sessionStorage.setItem('fitness_assessment_data', JSON.stringify(data));
-    sessionStorage.setItem('fitness_assessment_results', JSON.stringify(results));
 
-    window.location.href = 'results.php';
+    sessionStorage.setItem('fitness_assessment_results', JSON.stringify({
+      bmi: '',
+      bmiAnalysis: { status: 'جاري التحليل...', className: 'text-primary', recommendation: 'جاري توليد خطة التمارين بالذكاء الاصطناعي...' },
+      exercises: [],
+      tips: []
+    }));
+
+    (async function () {
+      try {
+        const ai = await fetchAIResults(data);
+        if (!ai) {
+          throw new Error('لم يتم الحصول على اقتراحات من الذكاء الاصطناعي');
+        }
+        sessionStorage.setItem('fitness_assessment_results', JSON.stringify(ai));
+        window.location.href = 'results.php';
+      } catch (err) {
+        const msg = err && err.message ? err.message : 'فشل توليد الاقتراحات بالذكاء الاصطناعي';
+        const fallbackResults = createFallbackResults(data, calculateBMI(Number(data.weight), Number(data.height)));
+        fallbackResults.bmiAnalysis.status = 'الذكاء الاصطناعي غير متاح';
+        fallbackResults.bmiAnalysis.recommendation = msg + '. تم عرض اقتراحات احتياطية.';
+        sessionStorage.setItem('fitness_assessment_results', JSON.stringify(fallbackResults));
+        window.location.href = 'results.php';
+      }
+    })();
   });
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -218,7 +258,7 @@
     const dataStr = sessionStorage.getItem('fitness_assessment_data');
     const resStr = sessionStorage.getItem('fitness_assessment_results');
 
-    if (!dataStr || !resStr) {
+    if (!dataStr || !resStr || resStr === 'null') {
       root.innerHTML = '<div class="alert alert-info">لا توجد نتائج بعد. ابدأ من صفحة التقييم.</div><a class="btn btn-success fw-bold" href="assessment.php">اذهب للتقييم</a>';
       return;
     }

@@ -1,0 +1,13 @@
+# Security: Keep sensitive configuration out of version control
+config.local.php
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

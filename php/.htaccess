@@ -1,0 +1,20 @@
+# Security: Deny access to sensitive files
+<FilesMatch "^config\.local\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect .gitignore too
+<FilesMatch "^\.gitignore$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Disable directory indexing
+Options -Indexes
+
+# Prevent access to .htaccess itself
+<FilesMatch "^\.htaccess$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
