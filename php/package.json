@@ -1,0 +1,11 @@
+{
+  "name": "fitness-app-backend",
+  "version": "1.0.0",
+  "description": "PHP Backend for Fitness App",
+  "scripts": {
+    "start": "php -S 0.0.0.0:$PORT -t ."
+  },
+  "engines": {
+    "php": ">=8.0"
+  }
+}

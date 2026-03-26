@@ -7,10 +7,21 @@ function db(): ?mysqli {
   if ($conn instanceof mysqli) return $conn;
 
   $cfg = [];
-  $cfgPath = __DIR__ . '/../config.local.php';
-  if (is_file($cfgPath)) {
-    $cfg = require $cfgPath;
-    if (!is_array($cfg)) $cfg = [];
+  
+  // Load from environment variables first (Railway)
+  if (getenv('DB_HOST')) {
+    $cfg['DB_HOST'] = getenv('DB_HOST');
+    $cfg['DB_USER'] = getenv('DB_USER');
+    $cfg['DB_PASS'] = getenv('DB_PASS');
+    $cfg['DB_NAME'] = getenv('DB_NAME');
+    $cfg['DB_PORT'] = getenv('DB_PORT') ?: 3306;
+  } else {
+    // Load from local config file
+    $cfgPath = __DIR__ . '/../config.local.php';
+    if (is_file($cfgPath)) {
+      $cfg = require $cfgPath;
+      if (!is_array($cfg)) $cfg = [];
+    }
   }
 
   $host = (string)($cfg['DB_HOST'] ?? '127.0.0.1');
