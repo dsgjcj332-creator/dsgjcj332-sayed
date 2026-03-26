@@ -127,13 +127,19 @@
 
     const exCards = payload.results.exercises.map(function (ex) {
       const diffClass = ex.difficulty.indexOf('سهل') !== -1 ? 'success' : (ex.difficulty === 'متوسط' ? 'warning' : 'danger');
+      const media = (ex.imageUrl && String(ex.imageUrl).trim() !== '')
+        ? ('<img src="' + ex.imageUrl + '" alt="" class="img-fluid rounded" style="max-height:110px;object-fit:contain;" />')
+        : ('<div class="fs-1">' + ex.image + '</div>');
+      const videoBtn = (ex.videoUrl && String(ex.videoUrl).trim() !== '')
+        ? ('<a class="btn btn-sm btn-outline-primary fw-bold mt-3" href="' + ex.videoUrl + '" target="_blank" rel="noopener noreferrer">فيديو</a>')
+        : '';
       return (
         '<div class="col-md-6 col-lg-4">' +
           '<div class="card h-100 card-hover">' +
             '<div class="card-body">' +
               '<div class="d-flex align-items-start justify-content-between gap-2">' +
                 '<div>' +
-                  '<div class="fs-1">' + ex.image + '</div>' +
+                  media +
                   '<div class="fw-bold mt-1">' + ex.name + '</div>' +
                 '</div>' +
                 '<span class="badge text-bg-' + diffClass + '">' + ex.difficulty + '</span>' +
@@ -141,6 +147,7 @@
               '<div class="mt-3 small text-muted badge-soft rounded px-2 py-1 d-inline-block">⏱ ' + ex.duration + '</div>' +
               '<div class="mt-3 small"><span class="fw-bold text-success">الفائدة:</span> ' + ex.benefits + '</div>' +
               (ex.aiReason ? '<div class="mt-3 small text-muted">' + ex.aiReason + '</div>' : '') +
+              videoBtn +
             '</div>' +
           '</div>' +
         '</div>'

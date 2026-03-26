@@ -7,6 +7,64 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   exit;
 }
 
+require_once __DIR__ . '/../includes/database.php';
+
+function normalizeGoal(string $goal): string {
+  return $goal === 'fitness' ? 'general_fitness' : $goal;
+}
+
+function normalizeHealthCondition(string $healthCondition): string {
+  if ($healthCondition === 'heart') return 'chronic';
+  if ($healthCondition === 'back_pain') return 'injury';
+  return $healthCondition;
+}
+
+function mapDbDifficulty(string $difficulty): string {
+  $d = strtolower(trim($difficulty));
+  if ($d === 'easy') return 'سهل';
+  if ($d === 'beginner') return 'سهل';
+  if ($d === 'medium') return 'متوسط';
+  if ($d === 'hard') return 'صعب';
+  return $difficulty;
+}
+
+function fetchExercisesFromDb(?mysqli $conn, string $goal, string $healthCondition, int $limit): array {
+  if (!$conn) return [];
+
+  $goal = normalizeGoal($goal);
+  $healthCondition = normalizeHealthCondition($healthCondition);
+
+  $sql = "SELECT name, difficulty, description, image_url, video_url\n"
+    . "FROM exercises\n"
+    . "WHERE ((goal = ? AND health_condition = ?)\n"
+    . "   OR (goal = ?)\n"
+    . "   OR (health_condition = ?)\n"
+    . "   OR (health_condition = 'safe'))\n"
+    . "LIMIT ?";
+
+  $stmt = $conn->prepare($sql);
+  if (!$stmt) return [];
+
+  $stmt->bind_param('ssssi', $goal, $healthCondition, $goal, $healthCondition, $limit);
+  if (!$stmt->execute()) {
+    $stmt->close();
+    return [];
+  }
+
+  $res = $stmt->get_result();
+  if (!$res) {
+    $stmt->close();
+    return [];
+  }
+
+  $rows = [];
+  while ($row = $res->fetch_assoc()) {
+    $rows[] = $row;
+  }
+  $stmt->close();
+  return $rows;
+}
+
 $raw = file_get_contents('php://input');
 $payload = json_decode($raw, true);
 
@@ -49,6 +107,49 @@ if ($bmi < 18.5) {
   $bmiAnalysis = ['status' => 'سمنة', 'className' => 'text-danger', 'recommendation' => 'ابدأ بتمارين خفيفة منخفضة التأثير واستشر طبيب'];
 }
 
+$limit = ($timeAvailable === '15') ? 3 : (($timeAvailable === '30') ? 5 : 7);
+
+$conn = db();
+$rows = fetchExercisesFromDb($conn, $goal, $healthCondition, $limit);
+if (count($rows) > 0) {
+  $durationByTime = [
+    '15' => '10-15 دقيقة',
+    '30' => '20-30 دقيقة',
+    '60' => '30-45 دقيقة'
+  ];
+  $dur = $durationByTime[$timeAvailable] ?? $durationByTime['30'];
+
+  $exercises = [];
+  foreach ($rows as $r) {
+    $exercises[] = [
+      'name' => (string)($r['name'] ?? ''),
+      'duration' => $dur,
+      'difficulty' => mapDbDifficulty((string)($r['difficulty'] ?? '')),
+      'image' => '🏋️',
+      'benefits' => (string)($r['description'] ?? ''),
+      'aiReason' => 'اقتراح من قاعدة بيانات تمارين موثوقة',
+      'imageUrl' => (string)($r['image_url'] ?? ''),
+      'videoUrl' => (string)($r['video_url'] ?? '')
+    ];
+  }
+
+  $tips = [];
+  $tips[] = 'ابدأ بإحماء 5-10 دقائق قبل التمرين';
+  $tips[] = 'حافظ على شرب الماء بشكل منتظم';
+  if ($healthCondition !== 'normal') $tips[] = 'لو ظهر ألم غير طبيعي توقف واستشر مختص';
+
+  echo json_encode([
+    'ok' => true,
+    'results' => [
+      'bmi' => $bmi,
+      'bmiAnalysis' => $bmiAnalysis,
+      'exercises' => array_slice($exercises, 0, $limit),
+      'tips' => array_slice($tips, 0, 5)
+    ]
+  ], JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
 // Generate personalized exercises based on user data
 $exercises = [];
 
@@ -65,8 +166,6 @@ $templates = [
   'resistance' => ['name' => 'تمارين المقاومة', 'image' => '🏋️', 'benefits' => 'بناء العضلات وشد الجسم'],
   'water' => ['name' => 'تمارين مائية', 'image' => '💧', 'benefits' => 'آمن تماماً للمفاصل وممتاز للتأهيل']
 ];
-
-$limit = ($timeAvailable === '15') ? 3 : (($timeAvailable === '30') ? 5 : 7);
 
 // Select exercises based on conditions
 $selected = [];

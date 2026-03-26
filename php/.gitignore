@@ -1,9 +1,9 @@
-# Security: Keep sensitive configuration out of version control
-config.local.php
-
 # IDE files
 .vscode/
 .idea/
+
+# Security: Keep sensitive configuration out of version control
+config.local.php
 
 # OS files
 .DS_Store
